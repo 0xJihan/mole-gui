@@ -12,13 +12,16 @@ Real-time hardware telemetry, deep system cleaning, batch application uninstalla
   <a href="https://github.com/0xJihan/Mole-GUI/releases/latest">
     <img src="https://img.shields.io/badge/Download-Latest_Release-2ea44f?style=for-the-badge&logo=apple&logoColor=white" alt="Download the latest release" />
   </a>
+  <a href="https://supportkori.com/0xjihan">
+    <img src="https://img.shields.io/badge/Support-SupportKori-e11d48?style=for-the-badge&logo=heart&logoColor=white" alt="Support on SupportKori" />
+  </a>
   <img src="https://img.shields.io/badge/macOS-12.0%2B-black?style=for-the-badge&logo=apple&logoColor=white" alt="macOS 12.0 or later" />
   <img src="https://img.shields.io/badge/Tauri_2-Rust_+_React_19-blue?style=for-the-badge&logo=tauri&logoColor=white" alt="Built with Tauri 2, Rust and React 19" />
   <img src="https://img.shields.io/badge/Engine-Original_Mole_CLI-0a7ea4?style=for-the-badge&logo=gnu-bash&logoColor=white" alt="Powered by original Mole CLI" />
   <img src="https://img.shields.io/badge/Zero-Simulation-8957e5?style=for-the-badge&logo=shieldcheck&logoColor=white" alt="100% Real Maintenance Execution" />
 </p>
 
-[**Download for macOS →**](https://github.com/0xJihan/Mole-GUI/releases/latest) · [Why Mole GUI?](#why-mole-gui) · [Features](#features) · [Screenshots](#screenshots) · [Installation](#installation) · [Architecture](#architecture) · [Developer & Support](#developer--support)
+[**Download for macOS →**](https://github.com/0xJihan/Mole-GUI/releases/latest) · [**💖 Support Developer**](https://supportkori.com/0xjihan) · [Screenshots](#screenshots) · [Why Mole GUI?](#why-mole-gui) · [Features](#features) · [Installation](#installation) · [Architecture](#architecture) · [Developer & Support](#developer--support)
 
 </div>
 
@@ -27,6 +30,35 @@ Real-time hardware telemetry, deep system cleaning, batch application uninstalla
 <img src="arts/mole1.png" alt="Mole GUI main dashboard with real-time hardware telemetry and maintenance tools" width="100%" />
 
 <p align="center"><sub><b>The Mole GUI window.</b> Live hardware telemetry and system health at a glance, coupled with full graphical control over the authentic Mole CLI.</sub></p>
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="arts/mole2.png" alt="Mole GUI live hardware telemetry" width="100%" />
+      <p align="center"><sub><b>Hardware Telemetry</b><br/>Real-time CPU, GPU, Memory, and Disk stats.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="arts/mole4.png" alt="Mole GUI application uninstaller" width="100%" />
+      <p align="center"><sub><b>Batch Application Uninstaller</b><br/>Multi-app selection, native macOS app icons, and residue removal.</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="arts/mole3.png" alt="Mole GUI system overview and health score" width="100%" />
+      <p align="center"><sub><b>System Overview</b><br/>Real-time system health evaluation and storage metrics.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="arts/mole5.png" alt="Mole GUI audit history" width="100%" />
+      <p align="center"><sub><b>Audit History</b><br/>Chronological audit trail of all previous cleaning sessions.</sub></p>
+    </td>
+  </tr>
+</table>
+
+---
 
 ## Why Mole GUI?
 
@@ -90,33 +122,6 @@ However, terminal maintenance tools can be intimidating or cumbersome for everyd
 - **True Pseudo-Terminal** — Runs with full VT100 / xterm-256color support, ANSI escape sequences, and dynamic resizing.
 - **Persistent Drawer** — Output remains intact when minimized, switched, or restored.
 - **Interactive Control** — Answer interactive prompts or provide keyboard input directly into the running command.
-
----
-
-## Screenshots
-
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="arts/mole2.png" alt="Mole GUI live hardware telemetry" width="100%" />
-      <p align="center"><sub><b>Hardware Telemetry</b><br/>Real-time CPU, GPU, Memory, and Disk stats.</sub></p>
-    </td>
-    <td width="50%" valign="top">
-      <img src="arts/mole4.png" alt="Mole GUI application uninstaller" width="100%" />
-      <p align="center"><sub><b>Batch Application Uninstaller</b><br/>Multi-app selection, native macOS app icons, and residue removal.</sub></p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="arts/mole3.png" alt="Mole GUI system overview and health score" width="100%" />
-      <p align="center"><sub><b>System Overview</b><br/>Real-time system health evaluation and storage metrics.</sub></p>
-    </td>
-    <td width="50%" valign="top">
-      <img src="arts/mole5.png" alt="Mole GUI audit history" width="100%" />
-      <p align="center"><sub><b>Audit History</b><br/>Chronological audit trail of all previous cleaning sessions.</sub></p>
-    </td>
-  </tr>
-</table>
 
 ---
 
@@ -276,6 +281,6 @@ If you find Mole GUI helpful and would like to support ongoing development, main
 
 <br/><br/>
 
-<a href="https://github.com/0xJihan/Mole-GUI/releases/latest"><b>Download Mole GUI</b></a> · <a href="https://github.com/0xJihan/Mole-GUI">View Source</a> · <a href="https://github.com/0xJihan/Mole-GUI/issues">Report an Issue</a>
+<a href="https://github.com/0xJihan/Mole-GUI/releases/latest"><b>Download Mole GUI</b></a> · <a href="https://supportkori.com/0xjihan">Support Developer</a> · <a href="https://github.com/0xJihan/Mole-GUI">View Source</a> · <a href="https://github.com/0xJihan/Mole-GUI/issues">Report an Issue</a>
 
 </div>

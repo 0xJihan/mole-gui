@@ -95,9 +95,9 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
         <div className="bg-[#101522] border border-white/10 rounded-2xl p-6 shadow-xl space-y-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-blue-200">Automatic One-Click Install</h3>
+              <h3 className="text-sm font-semibold text-blue-200">Official System Installation</h3>
               <p className="text-xs text-blue-300/80">
-                Installs the latest official Mole release directly into your user environment without root or Touch ID prompts.
+                Installs the official Mole CLI to your system using Touch ID or administrator password.
               </p>
             </div>
             <button

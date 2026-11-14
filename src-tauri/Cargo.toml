@@ -1,0 +1,32 @@
+[package]
+name = "mole-desktop"
+version = "0.1.0"
+description = "Native GUI wrapper for the Mole system maintenance CLI"
+authors = ["Mole Desktop Contributors"]
+edition = "2024"
+
+[lib]
+name = "mole_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+cc = "1.0"
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+portable-pty = "0.8"
+uuid = { version = "1", features = ["v4", "serde"] }
+dirs = "6"
+chrono = { version = "0.4", features = ["serde"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

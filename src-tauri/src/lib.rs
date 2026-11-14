@@ -11,30 +11,6 @@ use mole::status::StatusPoller;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Ensure standard macOS and user toolchain paths are present in PATH for GUI launches
-    let mut paths = vec![
-        "/opt/homebrew/bin".to_string(),
-        "/usr/local/bin".to_string(),
-        "/usr/bin".to_string(),
-        "/bin".to_string(),
-        "/usr/sbin".to_string(),
-        "/sbin".to_string(),
-    ];
-    if let Some(home) = dirs::home_dir() {
-        paths.insert(0, home.join(".local/bin").to_string_lossy().to_string());
-        paths.insert(1, home.join("bin").to_string_lossy().to_string());
-    }
-    if let Ok(current_path) = std::env::var("PATH") {
-        for p in current_path.split(':') {
-            if !paths.contains(&p.to_string()) && !p.is_empty() {
-                paths.push(p.to_string());
-            }
-        }
-    }
-    unsafe {
-        std::env::set_var("PATH", paths.join(":"));
-    }
-
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {

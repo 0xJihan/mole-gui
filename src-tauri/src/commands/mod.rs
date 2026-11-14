@@ -269,7 +269,6 @@ pub async fn cancel_operation(
     state
         .process_mgr
         .cancel_operation(&operation_id)
-        .await
         .map_err(|e| e.to_string())
 }
 
@@ -282,7 +281,6 @@ pub async fn send_operation_input(
     state
         .process_mgr
         .send_input(&operation_id, &input)
-        .await
         .map_err(|e| e.to_string())
 }
 
@@ -296,7 +294,6 @@ pub async fn resize_pty(
     state
         .process_mgr
         .resize_pty(&operation_id, cols, rows)
-        .await
         .map_err(|e| e.to_string())
 }
 

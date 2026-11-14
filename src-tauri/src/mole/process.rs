@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::path::PathBuf;
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use portable_pty::{native_pty_system, CommandBuilder, MasterPty, PtySize};
 use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
@@ -24,6 +23,30 @@ pub struct ProcessManager {
     operations: Arc<Mutex<HashMap<String, RunningOperation>>>,
 }
 
+pub fn get_system_path() -> String {
+    let mut paths = vec![
+        "/opt/homebrew/bin".to_string(),
+        "/usr/local/bin".to_string(),
+        "/usr/bin".to_string(),
+        "/bin".to_string(),
+        "/usr/sbin".to_string(),
+        "/sbin".to_string(),
+    ];
+    if let Some(home) = dirs::home_dir() {
+        paths.insert(0, home.join(".local/bin").to_string_lossy().to_string());
+        paths.insert(1, home.join(".cargo/bin").to_string_lossy().to_string());
+        paths.insert(2, home.join("bin").to_string_lossy().to_string());
+    }
+    if let Ok(current_path) = std::env::var("PATH") {
+        for p in current_path.split(':') {
+            if !paths.contains(&p.to_string()) && !p.is_empty() {
+                paths.push(p.to_string());
+            }
+        }
+    }
+    paths.join(":")
+}
+
 impl ProcessManager {
     pub fn new(app: AppHandle) -> Self {
         Self {
@@ -32,12 +55,21 @@ impl ProcessManager {
         }
     }
 
-    pub async fn cancel_operation(&self, id: &str) -> Result<(), MoleError> {
-        let mut ops = self.operations.lock().await;
-        if let Some(op) = ops.remove(id) {
-            let mut killer_guard = op.killer.lock().await;
-            if let Some(killer) = killer_guard.take() {
-                killer();
+    pub fn cancel_operation(&self, id: &str) -> Result<(), MoleError> {
+        let op = {
+            let mut ops = self.operations.lock().map_err(|e| MoleError::ProcessFailed {
+                command: "cancel".into(),
+                code: None,
+                stderr: e.to_string(),
+            })?;
+            ops.remove(id)
+        };
+
+        if let Some(op) = op {
+            if let Ok(mut killer_guard) = op.killer.lock() {
+                if let Some(killer) = killer_guard.take() {
+                    killer();
+                }
             }
             let _ = self.app.emit(
                 "mole://op-exit",
@@ -56,14 +88,23 @@ impl ProcessManager {
         }
     }
 
-    pub async fn send_input(&self, id: &str, input: &str) -> Result<(), MoleError> {
-        let ops = self.operations.lock().await;
-        if let Some(op) = ops.get(id) {
-            let mut writer_guard = op.writer.lock().await;
-            if let Some(writer) = writer_guard.as_mut() {
-                writer.write_all(input.as_bytes()).map_err(|e| MoleError::IoError(e.to_string()))?;
-                writer.flush().map_err(|e| MoleError::IoError(e.to_string()))?;
-                return Ok(());
+    pub fn send_input(&self, id: &str, input: &str) -> Result<(), MoleError> {
+        let op_opt = {
+            let ops = self.operations.lock().map_err(|e| MoleError::ProcessFailed {
+                command: "send_input".into(),
+                code: None,
+                stderr: e.to_string(),
+            })?;
+            ops.get(id).map(|op| op.writer.clone())
+        };
+
+        if let Some(writer_arc) = op_opt {
+            if let Ok(mut writer_guard) = writer_arc.lock() {
+                if let Some(writer) = writer_guard.as_mut() {
+                    writer.write_all(input.as_bytes()).map_err(|e| MoleError::IoError(e.to_string()))?;
+                    writer.flush().map_err(|e| MoleError::IoError(e.to_string()))?;
+                    return Ok(());
+                }
             }
         }
         Err(MoleError::ProcessFailed {
@@ -73,18 +114,27 @@ impl ProcessManager {
         })
     }
 
-    pub async fn resize_pty(&self, id: &str, cols: u16, rows: u16) -> Result<(), MoleError> {
-        let ops = self.operations.lock().await;
-        if let Some(op) = ops.get(id) {
-            let master_guard = op.master.lock().await;
-            if let Some(master) = master_guard.as_ref() {
-                let _ = master.resize(PtySize {
-                    rows,
-                    cols,
-                    pixel_width: 0,
-                    pixel_height: 0,
-                });
-                return Ok(());
+    pub fn resize_pty(&self, id: &str, cols: u16, rows: u16) -> Result<(), MoleError> {
+        let op_opt = {
+            let ops = self.operations.lock().map_err(|e| MoleError::ProcessFailed {
+                command: "resize_pty".into(),
+                code: None,
+                stderr: e.to_string(),
+            })?;
+            ops.get(id).map(|op| op.master.clone())
+        };
+
+        if let Some(master_arc) = op_opt {
+            if let Ok(master_guard) = master_arc.lock() {
+                if let Some(master) = master_guard.as_ref() {
+                    let _ = master.resize(PtySize {
+                        rows,
+                        cols,
+                        pixel_width: 0,
+                        pixel_height: 0,
+                    });
+                    return Ok(());
+                }
             }
         }
         Ok(())
@@ -121,15 +171,7 @@ impl ProcessManager {
         cmd.env("COLORTERM", "truecolor");
         cmd.env("LANG", "en_US.UTF-8");
         cmd.env("LC_ALL", "en_US.UTF-8");
-
-        let current_path = std::env::var("PATH").unwrap_or_default();
-        let standard_paths = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
-        let merged_path = if current_path.is_empty() {
-            standard_paths.to_string()
-        } else {
-            format!("{}:{}", standard_paths, current_path)
-        };
-        cmd.env("PATH", merged_path);
+        cmd.env("PATH", get_system_path());
 
         for arg in &args {
             cmd.arg(arg);
@@ -174,8 +216,9 @@ impl ProcessManager {
         };
 
         {
-            let mut ops = self.operations.lock().await;
-            ops.insert(op_id.clone(), op);
+            if let Ok(mut ops) = self.operations.lock() {
+                ops.insert(op_id.clone(), op);
+            }
         }
 
         // Emit started event
@@ -295,13 +338,10 @@ impl ProcessManager {
             // Terminate any lingering background subshells
             let _ = killer_for_wait.kill();
 
-            // Remove from active operations map
-            let op_id_for_removal = op_id_clone.clone();
-            let operations_for_removal = operations_ref.clone();
-            tokio::spawn(async move {
-                let mut ops = operations_for_removal.lock().await;
-                ops.remove(&op_id_for_removal);
-            });
+            // Synchronously remove from active operations map - zero tokio::spawn, zero panics!
+            if let Ok(mut ops) = operations_ref.lock() {
+                ops.remove(&op_id_clone);
+            }
 
             // Emit exit event
             let _ = app_clone.emit(

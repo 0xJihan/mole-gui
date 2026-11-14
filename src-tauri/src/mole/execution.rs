@@ -6,9 +6,15 @@ use crate::mole::types::{MoleAnalyzeResult, MoleHistoryResponse, MoleInstalledAp
 
 pub struct CommandExecutor;
 
+fn create_command(bin_path: &str) -> Command {
+    let mut cmd = Command::new(bin_path);
+    cmd.env("PATH", crate::mole::process::get_system_path());
+    cmd
+}
+
 impl CommandExecutor {
     pub async fn list_installed_apps(bin_path: &str) -> Result<Vec<MoleInstalledApp>, MoleError> {
-        let output = Command::new(bin_path)
+        let output = create_command(bin_path)
             .arg("uninstall")
             .arg("--list")
             .output()
@@ -56,7 +62,7 @@ impl CommandExecutor {
         bin_path: &str,
         path: Option<&str>,
     ) -> Result<MoleAnalyzeResult, MoleError> {
-        let mut cmd = Command::new(bin_path);
+        let mut cmd = create_command(bin_path);
         cmd.arg("analyze").arg("--json");
 
         if let Some(target) = path {
@@ -100,7 +106,7 @@ impl CommandExecutor {
         bin_path: &str,
         limit: Option<u32>,
     ) -> Result<MoleHistoryResponse, MoleError> {
-        let mut cmd = Command::new(bin_path);
+        let mut cmd = create_command(bin_path);
         cmd.arg("history").arg("--json");
 
         let lim = limit.unwrap_or(50).min(200);

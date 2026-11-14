@@ -57,9 +57,10 @@ impl StatusPoller {
             candidates: detection.candidate_paths,
         })?;
 
-        let output = Command::new(&bin_path)
-            .arg("status")
-            .arg("--json")
+        let mut cmd = Command::new(&bin_path);
+        cmd.arg("status").arg("--json");
+        cmd.env("PATH", crate::mole::process::get_system_path());
+        let output = cmd
             .output()
             .await
             .map_err(|e| MoleError::ProcessFailed {
@@ -101,14 +102,14 @@ impl StatusPoller {
         }
 
         let poller = self.clone();
-        tokio::spawn(async move {
+        tauri::async_runtime::spawn(async move {
             while poller.is_running.load(Ordering::Relaxed) {
                 let interval = poller.interval_ms.load(Ordering::Relaxed);
 
                 // Overlap prevention: if another poll is currently running, skip this cycle
                 if !poller.is_polling_active.swap(true, Ordering::SeqCst) {
                     let poller_clone = poller.clone();
-                    tokio::spawn(async move {
+                    tauri::async_runtime::spawn(async move {
                         match poller_clone.poll_once().await {
                             Ok(snapshot) => {
                                 let _ = poller_clone.app.emit("mole://status", &snapshot);

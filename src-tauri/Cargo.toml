@@ -28,5 +28,5 @@ chrono = { version = "0.4", features = ["serde"] }
 codegen-units = 1
 lto = true
 opt-level = 3
-panic = "abort"
-strip = true
+panic = "unwind"
+strip = false

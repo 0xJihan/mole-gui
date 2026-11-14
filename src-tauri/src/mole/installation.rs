@@ -10,21 +10,45 @@ pub struct MoleInstaller;
 
 impl MoleInstaller {
     pub async fn install(app: AppHandle) -> Result<MoleInstallationInfo, MoleError> {
-        // Emit starting event
-        let _ = app.emit("mole://install-log", "Starting official Mole installation...\n");
+        let _ = app.emit("mole://install-log", "Preparing Mole installation...\n");
 
-        // Prefer official installation script as supported by tw93/mole
-        let mut child = Command::new("bash")
-            .arg("-c")
-            .arg("curl -fsSL https://raw.githubusercontent.com/tw93/mole/main/install.sh | bash")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(|e| MoleError::ProcessFailed {
-                command: "install.sh".to_string(),
-                code: None,
-                stderr: e.to_string(),
-            })?;
+        let home = dirs::home_dir().ok_or_else(|| MoleError::IoError("Could not determine user home directory".into()))?;
+        let target_dir = home.join(".local/bin");
+        let target_dir_str = target_dir.to_string_lossy().to_string();
+
+        // Ensure ~/.local/bin exists and is owned by the current user
+        if let Err(e) = tokio::fs::create_dir_all(&target_dir).await {
+            let _ = app.emit("mole://install-log", format!("Warning: Could not create {}: {}\n", target_dir_str, e));
+        }
+
+        let _ = app.emit("mole://install-log", format!("Target prefix: {}\n", target_dir_str));
+        let _ = app.emit("mole://install-log", "Downloading and installing official Mole CLI (zero root access required)...\n\n");
+
+        // We run curl | bash passing `--prefix "$HOME/.local/bin"`.
+        // This installs to a user-owned directory and completely prevents any
+        // repeated Touch ID / sudo infinite authorization loops.
+        let install_script = format!(
+            "curl -fsSL https://raw.githubusercontent.com/tw93/mole/main/install.sh | bash -s -- --prefix \"{}\"",
+            target_dir_str
+        );
+
+        let mut cmd = Command::new("bash");
+        cmd.arg("-c").arg(&install_script);
+        cmd.stdout(Stdio::piped());
+        cmd.stderr(Stdio::piped());
+
+        // Ensure PATH includes the target dir and Homebrew
+        let mut path_env = format!("{}:/opt/homebrew/bin:/usr/local/bin", target_dir_str);
+        if let Ok(curr_path) = std::env::var("PATH") {
+            path_env = format!("{}:{}", path_env, curr_path);
+        }
+        cmd.env("PATH", path_env);
+
+        let mut child = cmd.spawn().map_err(|e| MoleError::ProcessFailed {
+            command: "install.sh".to_string(),
+            code: None,
+            stderr: e.to_string(),
+        })?;
 
         let stdout = child.stdout.take().ok_or_else(|| MoleError::IoError("Failed to open stdout".into()))?;
         let stderr = child.stderr.take().ok_or_else(|| MoleError::IoError("Failed to open stderr".into()))?;
